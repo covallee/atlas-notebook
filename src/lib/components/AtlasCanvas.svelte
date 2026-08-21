@@ -48,6 +48,8 @@
   let isPanning = false;
   let panStart = { x: 0, y: 0, vbX: 0, vbY: 0 };
   let svgEl;
+  let windowWidth = 1200;
+  $: isMobile = windowWidth < 700;
 
   function worldPoint(e) {
     const rect = svgEl.getBoundingClientRect();
@@ -93,7 +95,7 @@
   }
 </script>
 
-<svelte:window on:mousemove={onMouseMove} on:mouseup={onMouseUp} />
+<svelte:window bind:innerWidth={windowWidth} on:mousemove={onMouseMove} on:mouseup={onMouseUp} />
 
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <svg
@@ -138,6 +140,7 @@
       <MapNode
         {map}
         {scale}
+        {isMobile}
         highlightColor={highlight}
         dimmed={isDimmed}
         selected={selectedMap?.name === map.name}

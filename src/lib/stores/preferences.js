@@ -1,6 +1,16 @@
 import { writable } from 'svelte/store';
 
 const STORAGE_KEY = 'atlas-preferred';
+export const preferencesStorageError = writable('');
+export const preferencesStatus = writable('');
+const STATUS_MS = 4000;
+let statusTimer;
+
+function setStatus(message) {
+  preferencesStatus.set(message);
+  if (statusTimer) clearTimeout(statusTimer);
+  statusTimer = setTimeout(() => preferencesStatus.set(''), STATUS_MS);
+}
 
 function loadPreferred() {
   try {
@@ -12,7 +22,7 @@ function loadPreferred() {
 }
 
 function createPreferencesStore() {
-  const { subscribe, set, update } = writable(loadPreferred());
+  const { subscribe, update } = writable(loadPreferred());
 
   return {
     subscribe,
@@ -24,8 +34,16 @@ function createPreferencesStore() {
         } else {
           next.add(mapName);
         }
-        localStorage.setItem(STORAGE_KEY, JSON.stringify([...next]));
-        return next;
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify([...next]));
+          preferencesStorageError.set('');
+          setStatus(next.has(mapName) ? 'Added to preferred maps.' : 'Removed from preferred maps.');
+          return next;
+        } catch {
+          preferencesStorageError.set('Storage unavailable. Preference not saved.');
+          setStatus('');
+          return prefs;
+        }
       });
     },
     isPreferred(prefs, mapName) {

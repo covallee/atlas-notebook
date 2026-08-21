@@ -31,10 +31,10 @@ export function getHighlightColor(map, active, customTagsData = {}) {
     if (active.has(f.id) && f.test(map)) return f.color;
   }
   // Check active custom tag filters (id format: "custom:TagName")
-  const mapTags = new Set(customTagsData[map.name] ?? []);
+  const mapTags = new Set((customTagsData[map.name] ?? []).map((tag) => tag.toLowerCase()));
   for (const id of active) {
     if (id.startsWith('custom:')) {
-      const tag = id.slice(7);
+      const tag = id.slice(7).toLowerCase();
       if (mapTags.has(tag)) return CUSTOM_TAG_COLOR;
     }
   }

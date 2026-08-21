@@ -1,8 +1,8 @@
 <script>
   import { resolveBossNames } from '../utils/bossNames.js';
   import bossImages from '../data/bossImages.json';
-  import { preferences } from '../stores/preferences.js';
-  import { customTags } from '../stores/customTags.js';
+  import { preferences, preferencesStorageError, preferencesStatus } from '../stores/preferences.js';
+  import { customTags, customTagStatus, customTagUndo } from '../stores/customTags.js';
 
   export let map = null;
   export let onClose = () => {};
@@ -45,11 +45,12 @@
           class="star-btn"
           class:active={isPreferred}
           title={isPreferred ? 'Remove from preferred' : 'Add to preferred'}
+          aria-label={isPreferred ? 'Remove from preferred maps' : 'Add to preferred maps'}
           on:click={() => preferences.toggle(map.name)}
         >
           ★
         </button>
-        <button class="close-btn" on:click={onClose}>✕</button>
+        <button class="close-btn" aria-label="Close map details" on:click={onClose}>✕</button>
       </div>
     </div>
 
@@ -119,9 +120,26 @@
           {#each userTags as tag}
             <span class="tag custom-tag">
               {tag}
-              <button class="remove-tag" on:click={() => customTags.removeTag(map.name, tag)} title="Remove tag">✕</button>
+              <button
+                class="remove-tag"
+                on:click={() => customTags.removeTag(map.name, tag)}
+                title="Remove tag"
+                aria-label={`Remove tag ${tag}`}
+              >✕</button>
             </span>
           {/each}
+        </div>
+        <div class="tag-feedback" aria-live="polite">
+          {#if $preferencesStorageError}
+            <span>{$preferencesStorageError}</span>
+          {:else if $preferencesStatus}
+            <span>{$preferencesStatus}</span>
+          {:else if $customTagStatus}
+            <span>{$customTagStatus}</span>
+            {#if $customTagUndo}
+              <button class="undo-tag-btn" on:click={() => customTags.undoRemove()} aria-label="Undo tag removal">Undo</button>
+            {/if}
+          {/if}
         </div>
         <div class="tag-input-row">
           <input
@@ -130,8 +148,9 @@
             on:keydown={handleTagKeydown}
             placeholder="Add tag…"
             maxlength="32"
+            aria-label="Add custom tag"
           />
-          <button class="add-tag-btn" on:click={handleAddTag}>+</button>
+          <button class="add-tag-btn" on:click={handleAddTag} aria-label="Add custom tag">+</button>
         </div>
       </div>
     </div>
@@ -262,7 +281,6 @@
     height: 100%;
     background: linear-gradient(90deg, #7c4dff, #c8a96e);
     border-radius: 3px;
-    transition: width 0.3s;
   }
   .rating-val { font-size: 11px; color: #aaa; width: 30px; text-align: right; }
   .tags { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -323,4 +341,39 @@
     line-height: 1;
   }
   .add-tag-btn:hover { background: #3a3a6a; border-color: #4dd0e1; }
+  .tag-feedback {
+    min-height: 18px;
+    color: #e0d9f0;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .undo-tag-btn {
+    background: none;
+    border: 1px solid #4dd0e1;
+    color: #4dd0e1;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    padding: 1px 6px;
+  }
+  @media (max-width: 700px) {
+    .tooltip {
+      top: auto;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      transform: none;
+      width: 100%;
+      border-radius: 12px 12px 0 0;
+      max-height: 58vh;
+      border-left: none;
+      border-right: none;
+      border-bottom: none;
+    }
+    .tooltip-body {
+      max-height: calc(58vh - 55px);
+    }
+  }
 </style>

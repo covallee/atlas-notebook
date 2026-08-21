@@ -76,4 +76,12 @@
     position: relative;
     overflow: hidden;
   }
+  @media (max-width: 700px) {
+    .app-subtitle {
+      display: none;
+    }
+    .app-body {
+      flex-direction: column;
+    }
+  }
 </style>

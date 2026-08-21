@@ -122,4 +122,30 @@
     flex-shrink: 0;
     display: inline-block;
   }
+  @media (max-width: 700px) {
+    .filter-panel {
+      width: 100%;
+      border-right: none;
+      border-bottom: 1px solid #2a2a4a;
+      padding: 8px;
+      flex-direction: row;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+    h2,
+    hr {
+      display: none;
+    }
+    .filter-group {
+      flex-direction: row;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .filter-item {
+      white-space: nowrap;
+      padding: 5px 10px;
+    }
+  }
 </style>

@@ -1,0 +1,27 @@
+{
+  "name": "Midnight Cartographer",
+  "palette": {
+    "background": ["#0d0d1a", "#12122a", "#1a1a2e"],
+    "structure": ["#2a2a4a", "#4a3f6b"],
+    "text": {
+      "primary": "#e0d9f0",
+      "muted": ["#888", "#666", "#aaa"]
+    },
+    "identity": {
+      "preferred": "#c8a96e"
+    },
+    "functional": {
+      "customTag": "#4dd0e1"
+    }
+  },
+  "responsive": {
+    "mobileBreakpoint": 700,
+    "filterPanel": "horizontal-rail",
+    "mapTooltip": "bottom-sheet"
+  },
+  "a11y": {
+    "mapNodeKeyboardSelection": ["Enter", "Space"],
+    "liveRegions": ["tag-feedback"],
+    "ariaLabels": ["tooltip-controls", "tag-controls"]
+  }
+}
