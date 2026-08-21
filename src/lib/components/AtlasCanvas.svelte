@@ -4,6 +4,7 @@
   import MapNode from './MapNode.svelte';
   import { activeFilters, preferredOnly, getHighlightColor } from '../stores/filters.js';
   import { preferences } from '../stores/preferences.js';
+  import { customTags } from '../stores/customTags.js';
 
   export let onSelectMap = () => {};
   export let selectedMap = null;
@@ -27,6 +28,7 @@
 
   // SVG pan/zoom state
   const PAD = 30;
+  const BG_OFFSET_Y = 30; // shift background image down to align with map nodes
   const MIN_X = Math.min(...atlasMaps.map((m) => m.x)) - PAD;
   const MAX_X = Math.max(...atlasMaps.map((m) => m.x)) + PAD;
   const MIN_Y = Math.min(...atlasMaps.map((m) => m.y)) - PAD;
@@ -105,6 +107,16 @@
   role="img"
   aria-label="Path of Exile Atlas"
 >
+  <!-- Background image -->
+  <image
+    href="/atlas.webp"
+    x={MIN_X}
+    y={MIN_Y + BG_OFFSET_Y}
+    width={MAX_X - MIN_X}
+    height={MAX_Y - MIN_Y}
+    preserveAspectRatio="xMidYMid meet"
+  />
+
   <!-- Connection lines -->
   <g class="connections">
     {#each connections as { from, to }}
@@ -121,7 +133,7 @@
   <!-- Map nodes -->
   <g class="nodes">
     {#each atlasMaps as map (map.name)}
-      {@const highlight = getHighlightColor(map, $activeFilters)}
+      {@const highlight = getHighlightColor(map, $activeFilters, $customTags)}
       {@const isDimmed = $preferredOnly && !$preferences.has(map.name)}
       <MapNode
         {map}

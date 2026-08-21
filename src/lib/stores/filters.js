@@ -19,13 +19,24 @@ export function toggleFilter(id) {
   });
 }
 
+const CUSTOM_TAG_COLOR = '#4dd0e1';
+
 /**
- * Given a map and the current active filter set, return the first
- * matching filter's color (or null if no match).
+ * Given a map, the current active filter set, and the customTags data,
+ * return the first matching filter's color (or null if no match).
  */
-export function getHighlightColor(map, active) {
+export function getHighlightColor(map, active, customTagsData = {}) {
+  // Check built-in filters first
   for (const f of FILTERS) {
     if (active.has(f.id) && f.test(map)) return f.color;
+  }
+  // Check active custom tag filters (id format: "custom:TagName")
+  const mapTags = new Set(customTagsData[map.name] ?? []);
+  for (const id of active) {
+    if (id.startsWith('custom:')) {
+      const tag = id.slice(7);
+      if (mapTags.has(tag)) return CUSTOM_TAG_COLOR;
+    }
   }
   return null;
 }

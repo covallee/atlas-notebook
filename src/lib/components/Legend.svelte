@@ -2,19 +2,41 @@
   import { FILTERS } from '../utils/filters.js';
   import { activeFilters } from '../stores/filters.js';
 
+  const MAP_TYPES = [
+    { label: 'Map', color: '#3a3a5c' },
+    { label: 'Special Map', color: '#4a2060' },
+    { label: 'Unique Map', color: '#5c3a00' },
+  ];
+
   $: activeList = FILTERS.filter((f) => $activeFilters.has(f.id));
+  $: activeCustomTags = [...$activeFilters]
+    .filter((id) => id.startsWith('custom:'))
+    .map((id) => ({ id, label: id.slice(7), color: '#4dd0e1' }));
 </script>
 
-{#if activeList.length}
-  <div class="legend">
+<div class="legend">
+  {#each MAP_TYPES as type}
+    <div class="legend-item">
+      <span class="swatch" style="background:{type.color}"></span>
+      <span>{type.label}</span>
+    </div>
+  {/each}
+  {#if activeList.length || activeCustomTags.length}
+    <div class="legend-divider"></div>
     {#each activeList as f}
       <div class="legend-item">
         <span class="swatch" style="background:{f.color}"></span>
         <span>{f.label}</span>
       </div>
     {/each}
-  </div>
-{/if}
+    {#each activeCustomTags as f}
+      <div class="legend-item">
+        <span class="swatch" style="background:{f.color}; border: 1px solid #4dd0e1"></span>
+        <span>{f.label}</span>
+      </div>
+    {/each}
+  {/if}
+</div>
 
 <style>
   .legend {
@@ -36,6 +58,11 @@
     padding: 4px 8px;
     font-size: 11px;
     color: #b0a8c8;
+  }
+  .legend-divider {
+    width: 1px;
+    background: #2a2a4a;
+    margin: 2px 0;
   }
   .swatch {
     width: 10px;

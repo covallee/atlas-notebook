@@ -1,6 +1,7 @@
 <script>
   import { FILTERS } from '../utils/filters.js';
   import { activeFilters, preferredOnly, toggleFilter } from '../stores/filters.js';
+  import { allCustomTags } from '../stores/customTags.js';
 
   function handleFilterClick(id) {
     toggleFilter(id);
@@ -34,6 +35,25 @@
       </button>
     {/each}
   </div>
+
+  {#if $allCustomTags.length}
+    <hr />
+    <h2>My Tags</h2>
+    <div class="filter-group">
+      {#each $allCustomTags as tag}
+        {@const id = `custom:${tag}`}
+        {@const active = $activeFilters.has(id)}
+        <button
+          class="filter-item"
+          class:active
+          on:click={() => handleFilterClick(id)}
+        >
+          <span class="dot" style="background:{active ? '#4dd0e1' : '#1a3a4a'}; border: 1px solid #4dd0e1"></span>
+          {tag}
+        </button>
+      {/each}
+    </div>
+  {/if}
 </aside>
 
 <style>

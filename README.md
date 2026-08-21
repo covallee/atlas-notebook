@@ -2,6 +2,49 @@
 
 This template should help get you started developing with Svelte in Vite.
 
+## Updating atlas data for a new league
+
+Maps of Exile is the source for the map and monster datasets:
+<https://mapsofexile.com/>.
+
+The repository-root `maps.json` and `monsters.json` files are the downloaded
+source snapshots. The application imports the copies in `src/lib/data/`, so
+updating only the root files does not change the app.
+
+1. Download the current league's `maps.json` and `monsters.json` from Maps of
+   Exile, then replace the root-level files with the downloads.
+2. Confirm both downloads are valid JSON:
+
+   ```sh
+   jq empty maps.json && jq empty monsters.json
+   ```
+
+3. Review the update, paying particular attention to new map names, removed
+   maps, map connections, boss IDs, and coordinate fields:
+
+   ```sh
+   git diff --stat -- maps.json monsters.json
+   git diff -- maps.json monsters.json
+   ```
+
+4. Copy the verified snapshots into the data files used by the app:
+
+   ```sh
+   cp maps.json src/lib/data/maps.json
+   cp monsters.json src/lib/data/monsters.json
+   ```
+
+5. Build the app:
+
+   ```sh
+   npm run build
+   ```
+
+6. Run `npm run dev` and check the atlas visually. Confirm that newly added
+   maps render at the expected coordinates, connections do not look broken,
+   filters still work, and map tooltips resolve boss names. Commit the source
+   snapshots and the `src/lib/data/` copies together.
+
 ## Recommended IDE Setup
 
 [VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode).

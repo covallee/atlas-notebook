@@ -1,15 +1,35 @@
 <script>
   import { resolveBossNames } from '../utils/bossNames.js';
+  import bossImages from '../data/bossImages.json';
   import { preferences } from '../stores/preferences.js';
+  import { customTags } from '../stores/customTags.js';
 
   export let map = null;
   export let onClose = () => {};
 
-  $: bossNames = map ? resolveBossNames(map.boss_ids) : [];
+  $: bosses = map
+    ? (map.boss_ids ?? []).map((id) => ({
+        name: resolveBossNames([id])[0],
+        image: bossImages[id],
+      }))
+    : [];
   $: isPreferred = map ? $preferences.has(map.name) : false;
+  $: userTags = map ? ($customTags[map.name] ?? []) : [];
+
+  let newTag = '';
 
   function ratingBar(value) {
     return value ? Math.round((value / 10) * 100) : 0;
+  }
+
+  function handleAddTag() {
+    if (!newTag.trim() || !map) return;
+    customTags.addTag(map.name, newTag.trim());
+    newTag = '';
+  }
+
+  function handleTagKeydown(e) {
+    if (e.key === 'Enter') handleAddTag();
   }
 </script>
 
@@ -43,12 +63,17 @@
         <span>{[...new Set(map.levels)].join(' / ')}</span>
       </div>
 
-      {#if bossNames.length}
+      {#if bosses.length}
         <div class="info-section">
           <div class="label">Bosses</div>
           <ul class="boss-list">
-            {#each bossNames as name}
-              <li>{name}</li>
+            {#each bosses as boss}
+              <li class="boss">
+                <span>{boss.name}</span>
+                {#if boss.image}
+                  <img class="boss-image" src={boss.image} alt={boss.name} />
+                {/if}
+              </li>
             {/each}
           </ul>
         </div>
@@ -86,6 +111,29 @@
           <p class="info-text">{map.info.boss}</p>
         </div>
       {/if}
+
+      <!-- Custom user tags -->
+      <div class="info-section">
+        <div class="label">My Tags</div>
+        <div class="tags">
+          {#each userTags as tag}
+            <span class="tag custom-tag">
+              {tag}
+              <button class="remove-tag" on:click={() => customTags.removeTag(map.name, tag)} title="Remove tag">✕</button>
+            </span>
+          {/each}
+        </div>
+        <div class="tag-input-row">
+          <input
+            class="tag-input"
+            bind:value={newTag}
+            on:keydown={handleTagKeydown}
+            placeholder="Add tag…"
+            maxlength="32"
+          />
+          <button class="add-tag-btn" on:click={handleAddTag}>+</button>
+        </div>
+      </div>
     </div>
   </div>
 {/if}
@@ -179,7 +227,19 @@
     padding-left: 16px;
     color: #c8b8e0;
   }
-  .boss-list li { margin-bottom: 2px; }
+  .boss {
+    margin-bottom: 8px;
+  }
+  .boss-image {
+    display: block;
+    width: 100%;
+    max-height: 180px;
+    margin-top: 4px;
+    border: 1px solid #4a3f6b;
+    border-radius: 4px;
+    object-fit: contain;
+    background: #12122a;
+  }
   .rating-row {
     display: flex;
     align-items: center;
@@ -216,4 +276,51 @@
     text-transform: capitalize;
   }
   .info-text { margin: 0; color: #b0a0d0; font-size: 12px; line-height: 1.5; }
+  .custom-tag {
+    background: #1a3a4a;
+    border-color: #4dd0e1;
+    color: #4dd0e1;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .remove-tag {
+    background: none;
+    border: none;
+    color: #4dd0e1;
+    cursor: pointer;
+    font-size: 9px;
+    padding: 0;
+    line-height: 1;
+    opacity: 0.7;
+  }
+  .remove-tag:hover { opacity: 1; }
+  .tag-input-row {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+  }
+  .tag-input {
+    flex: 1;
+    background: #1a1a3a;
+    border: 1px solid #4a3f6b;
+    border-radius: 4px;
+    color: #e0d9f0;
+    font-size: 12px;
+    padding: 4px 8px;
+    outline: none;
+  }
+  .tag-input:focus { border-color: #4dd0e1; }
+  .tag-input::placeholder { color: #555; }
+  .add-tag-btn {
+    background: #2d2d4e;
+    border: 1px solid #4a3f6b;
+    border-radius: 4px;
+    color: #e0d9f0;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0 10px;
+    line-height: 1;
+  }
+  .add-tag-btn:hover { background: #3a3a6a; border-color: #4dd0e1; }
 </style>
