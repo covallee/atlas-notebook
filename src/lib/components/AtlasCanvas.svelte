@@ -48,6 +48,12 @@
   let isPanning = false;
   let panStart = { x: 0, y: 0, vbX: 0, vbY: 0 };
   let svgEl;
+  let innerWidth = typeof window !== 'undefined' ? window.innerWidth : 1280;
+
+  // On desktop, keep full map names visible at every zoom level so users
+  // don't have to zoom in/out just to read them; mobile still favors
+  // shorthand at low zoom to avoid crowding the smaller viewport.
+  $: isDesktop = innerWidth > 700;
 
   function worldPoint(e) {
     const rect = svgEl.getBoundingClientRect();
@@ -93,7 +99,7 @@
   }
 </script>
 
-<svelte:window on:mousemove={onMouseMove} on:mouseup={onMouseUp} />
+<svelte:window bind:innerWidth on:mousemove={onMouseMove} on:mouseup={onMouseUp} />
 
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <svg
@@ -138,6 +144,7 @@
       <MapNode
         {map}
         {scale}
+        {isDesktop}
         highlightColor={highlight}
         dimmed={isDimmed}
         selected={selectedMap?.name === map.name}

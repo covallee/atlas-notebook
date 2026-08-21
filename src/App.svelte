@@ -73,7 +73,21 @@
   }
   .canvas-container {
     flex: 1;
+    min-width: 0;
+    min-height: 0;
     position: relative;
     overflow: hidden;
+  }
+
+  @media (max-width: 700px) {
+    .app-header {
+      padding: 8px 12px;
+    }
+    .app-subtitle {
+      display: none;
+    }
+    .app-body {
+      flex-direction: column;
+    }
   }
 </style>
