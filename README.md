@@ -13,34 +13,37 @@ updating only the root files does not change the app.
 
 1. Download the current league's `maps.json` and `monsters.json` from Maps of
    Exile, then replace the root-level files with the downloads.
-2. Confirm both downloads are valid JSON:
+2. Validate the downloads, review the added/removed/changed maps and monsters,
+   and synchronize both files into the copies used by the app:
 
    ```sh
-   jq empty maps.json && jq empty monsters.json
+   npm run update-atlas-data
    ```
 
-3. Review the update, paying particular attention to new map names, removed
-   maps, map connections, boss IDs, and coordinate fields:
+   The command rejects malformed JSON, duplicate map names or IDs, atlas maps
+   without coordinates, new unresolved atlas connections, and boss IDs that do
+   not exist in `monsters.json`. It does not update `src/lib/data/` if
+   validation fails.
+   To inspect a download without copying it, use:
 
    ```sh
-   git diff --stat -- maps.json monsters.json
-   git diff -- maps.json monsters.json
+   npm run update-atlas-data -- --dry-run
    ```
 
-4. Copy the verified snapshots into the data files used by the app:
+3. Review the resulting update:
 
    ```sh
-   cp maps.json src/lib/data/maps.json
-   cp monsters.json src/lib/data/monsters.json
+   git diff --stat -- maps.json monsters.json src/lib/data/
+   git diff -- maps.json monsters.json src/lib/data/
    ```
 
-5. Build the app:
+4. Build the app:
 
    ```sh
    npm run build
    ```
 
-6. Run `npm run dev` and check the atlas visually. Confirm that newly added
+5. Run `npm run dev` and check the atlas visually. Confirm that newly added
    maps render at the expected coordinates, connections do not look broken,
    filters still work, and map tooltips resolve boss names. Commit the source
    snapshots and the `src/lib/data/` copies together.
