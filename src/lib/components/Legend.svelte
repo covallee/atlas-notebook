@@ -71,4 +71,16 @@
     display: inline-block;
     flex-shrink: 0;
   }
+
+  @media (max-width: 700px) {
+    .legend {
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      gap: 4px;
+    }
+    .legend-item {
+      padding: 3px 6px;
+    }
+  }
 </style>

@@ -1,16 +1,6 @@
 import { writable } from 'svelte/store';
 
 const STORAGE_KEY = 'atlas-preferred';
-export const preferencesStorageError = writable('');
-export const preferencesStatus = writable('');
-const STATUS_MS = 4000;
-let statusTimer;
-
-function setStatus(message) {
-  preferencesStatus.set(message);
-  if (statusTimer) clearTimeout(statusTimer);
-  statusTimer = setTimeout(() => preferencesStatus.set(''), STATUS_MS);
-}
 
 function loadPreferred() {
   try {
@@ -22,11 +12,18 @@ function loadPreferred() {
 }
 
 function createPreferencesStore() {
-  const { subscribe, update } = writable(loadPreferred());
+  const { subscribe, set, update } = writable(loadPreferred());
 
   return {
     subscribe,
+    /**
+     * Toggles `mapName`'s preferred state. Returns true if the change was
+     * persisted, false if storage failed (e.g. private browsing, quota) —
+     * in which case the in-memory state is rolled back so the star never
+     * lies about what's actually saved.
+     */
     toggle(mapName) {
+      let ok = true;
       update((prefs) => {
         const next = new Set(prefs);
         if (next.has(mapName)) {
@@ -36,15 +33,13 @@ function createPreferencesStore() {
         }
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify([...next]));
-          preferencesStorageError.set('');
-          setStatus(next.has(mapName) ? 'Added to preferred maps.' : 'Removed from preferred maps.');
-          return next;
         } catch {
-          preferencesStorageError.set('Storage unavailable. Preference not saved.');
-          setStatus('');
+          ok = false;
           return prefs;
         }
+        return next;
       });
+      return ok;
     },
     isPreferred(prefs, mapName) {
       return prefs.has(mapName);

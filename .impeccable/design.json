@@ -1,27 +1,180 @@
 {
-  "name": "Midnight Cartographer",
-  "palette": {
-    "background": ["#0d0d1a", "#12122a", "#1a1a2e"],
-    "structure": ["#2a2a4a", "#4a3f6b"],
-    "text": {
-      "primary": "#e0d9f0",
-      "muted": ["#888", "#666", "#aaa"]
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-21T17:31:43-04:00",
+  "title": "Design System: PoE Atlas Notebook",
+  "extensions": {
+    "colorMeta": {
+      "midnight": {
+        "role": "neutral",
+        "displayName": "Midnight Field",
+        "canonical": "#0d0d1a",
+        "tonalRamp": ["#0d0d1a", "#17172a", "#22223b", "#353553", "#525272", "#737394", "#aaaaca", "#e8e8f5"]
+      },
+      "panel": {
+        "role": "neutral",
+        "displayName": "Layered Indigo",
+        "canonical": "#12122a",
+        "tonalRamp": ["#101024", "#181834", "#222247", "#323260", "#4d4d83", "#7171a5", "#a7a7cd", "#e8e8f6"]
+      },
+      "gold": {
+        "role": "primary",
+        "displayName": "Atlas Gold",
+        "canonical": "#c8a96e",
+        "tonalRamp": ["#271e0d", "#453417", "#675023", "#8c7135", "#b09359", "#c8a96e", "#e1c98f", "#f7ebc9"]
+      },
+      "filter-cyan": {
+        "role": "secondary",
+        "displayName": "Route Cyan",
+        "canonical": "#4fc3f7",
+        "tonalRamp": ["#062938", "#0d4a65", "#16739d", "#249dd0", "#4fc3f7", "#7dd4fb", "#b7e9fd", "#e2f7ff"]
+      },
+      "filter-orange": {
+        "role": "secondary",
+        "displayName": "Layout Amber",
+        "canonical": "#ffb74d",
+        "tonalRamp": ["#382006", "#633a0c", "#975a16", "#cd8124", "#ffb74d", "#ffca75", "#ffe0aa", "#fff3dc"]
+      },
+      "active-violet": {
+        "role": "secondary",
+        "displayName": "Active Violet",
+        "canonical": "#7c4dff",
+        "tonalRamp": ["#19083a", "#2f1167", "#472099", "#6334c9", "#7c4dff", "#9c75ff", "#c5adff", "#eadfff"]
+      },
+      "cyan-tag": {
+        "role": "secondary",
+        "displayName": "Custom Tag Cyan",
+        "canonical": "#4dd0e1",
+        "tonalRamp": ["#093138", "#0f5763", "#188190", "#28abbf", "#4dd0e1", "#7fe3f2", "#b6f0f8", "#e2fafd"]
+      },
+      "custom-tag-surface": {
+        "role": "neutral",
+        "displayName": "Custom Tag Surface",
+        "canonical": "#1a3a4a",
+        "tonalRamp": ["#0c1c24", "#132a35", "#1a3a4a", "#245166", "#337089", "#4993ab", "#7fbdd0", "#c1e3ec"]
+      }
     },
-    "identity": {
-      "preferred": "#c8a96e"
+    "typographyMeta": {
+      "title": {
+        "displayName": "Atlas Title",
+        "purpose": "Application and selected-map identity."
+      },
+      "body": {
+        "displayName": "Working Text",
+        "purpose": "Dense map details, lists, and controls."
+      },
+      "label": {
+        "displayName": "System Label",
+        "purpose": "Uppercase panel, type, and section labels."
+      },
+      "supporting": {
+        "displayName": "Supporting Text",
+        "purpose": "Compact filter controls, notes, and list content."
+      },
+      "map-title": {
+        "displayName": "Map Title",
+        "purpose": "Selected-map identity in the detail tooltip."
+      },
+      "icon": {
+        "displayName": "Preference Icon",
+        "purpose": "Preferred-map star."
+      }
     },
-    "functional": {
-      "customTag": "#4dd0e1"
+    "shadows": [
+      {
+        "name": "tooltip-lift",
+        "value": "0 8px 32px rgba(0,0,0,0.6)",
+        "purpose": "Lift the selected-map inspector above the Atlas canvas."
+      }
+    ],
+    "motion": [
+      {
+        "name": "filter-state",
+        "value": "background 0.15s, border-color 0.15s",
+        "purpose": "Quiet transition for filter hover and active states."
+      }
+    ],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Filter Button",
+      "kind": "button",
+      "refersTo": "filter-button",
+      "description": "Compact row control for toggling an Atlas filter.",
+      "html": "<button class=\"ds-filter-button\"><span class=\"ds-filter-dot\"></span>Good Layout</button>",
+      "css": ".ds-filter-button { display: flex; align-items: center; gap: 8px; padding: 5px 8px; color: #b0a8c8; background: transparent; border: 1px solid transparent; border-radius: 5px; font: 12px 'Segoe UI', system-ui, sans-serif; cursor: pointer; text-align: left; } .ds-filter-dot { width: 10px; height: 10px; border-radius: 50%; background: #ffb74d; } .ds-filter-button:hover { background: #1e1e3a; border-color: #4a3f6b; } .ds-filter-button:focus-visible { outline: 2px solid #7c4dff; outline-offset: 2px; }"
+    },
+    {
+      "name": "Active Filter Button",
+      "kind": "button",
+      "refersTo": "filter-button-active",
+      "description": "Selected filter state with violet containment.",
+      "html": "<button class=\"ds-filter-button ds-filter-button--active\"><span class=\"ds-filter-dot\"></span>High Density</button>",
+      "css": ".ds-filter-button { display: flex; align-items: center; gap: 8px; padding: 5px 8px; color: #e0d9f0; background: #1e1e3a; border: 1px solid #7c4dff; border-radius: 5px; font: 12px 'Segoe UI', system-ui, sans-serif; cursor: pointer; } .ds-filter-dot { width: 10px; height: 10px; border-radius: 50%; background: #ce93d8; } .ds-filter-button:hover { filter: brightness(1.1); } .ds-filter-button:focus-visible { outline: 2px solid #c8a96e; outline-offset: 2px; }"
+    },
+    {
+      "name": "Map Detail Tooltip",
+      "kind": "card",
+      "refersTo": "tooltip",
+      "description": "Elevated inspector for a selected Atlas map.",
+      "html": "<section class=\"ds-tooltip\"><header class=\"ds-tooltip-header\"><div><strong>Abomination Map</strong><span>Special map</span></div><button aria-label=\"Close\">×</button></header><div class=\"ds-tooltip-body\"><div class=\"ds-row\"><span>Level</span><span>84</span></div><p class=\"ds-label\">Bosses</p><ul><li>The Maven</li></ul></div></section>",
+      "css": ".ds-tooltip { width: 280px; overflow: hidden; color: #e0d9f0; background: #1a1a2e; border: 1px solid #4a3f6b; border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,0.6); font: 13px 'Segoe UI', system-ui, sans-serif; } .ds-tooltip-header { display: flex; justify-content: space-between; padding: 12px 12px 8px; background: #16213e; border-bottom: 1px solid #4a3f6b; } .ds-tooltip strong { display: block; color: #c8a96e; font-size: 14px; } .ds-tooltip-header span, .ds-label { display: block; color: #888; font-size: 11px; letter-spacing: .5px; text-transform: uppercase; } .ds-tooltip button { padding: 0 2px; color: #888; background: transparent; border: 0; font-size: 14px; cursor: pointer; } .ds-tooltip button:hover { color: #fff; } .ds-tooltip button:focus-visible { outline: 2px solid #c8a96e; } .ds-tooltip-body { padding: 10px 12px; } .ds-row { display: flex; justify-content: space-between; }"
+    },
+    {
+      "name": "Atlas Legend Chip",
+      "kind": "chip",
+      "refersTo": "tag",
+      "description": "Non-interactive active-filter legend item.",
+      "html": "<span class=\"ds-legend-chip\"><i></i>Boss Rushable</span>",
+      "css": ".ds-legend-chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; color: #b0a8c8; background: rgba(13,13,26,.85); border: 1px solid #2a2a4a; border-radius: 4px; font: 11px 'Segoe UI', system-ui, sans-serif; } .ds-legend-chip i { width: 10px; height: 10px; background: #ef9a9a; border-radius: 50%; }"
+    },
+    {
+      "name": "Atlas Map Node",
+      "kind": "custom",
+      "refersTo": "map-node",
+      "description": "Semantic map point with layered rings for filter, preference, and selection state.",
+      "html": "<button class=\"ds-map-node\" aria-label=\"Preferred map\"><span class=\"ds-map-ring ds-map-ring--filter\"></span><span class=\"ds-map-ring ds-map-ring--preferred\"></span><span class=\"ds-map-core\"></span><small>bom</small></button>",
+      "css": ".ds-map-node { position: relative; display: grid; place-items: center; width: 42px; height: 48px; padding: 0; color: #c8c8e8; background: transparent; border: 0; cursor: pointer; font: 9px 'Segoe UI', system-ui, sans-serif; } .ds-map-ring, .ds-map-core { position: absolute; border-radius: 50%; } .ds-map-ring--filter { width: 22px; height: 22px; border: 2px solid #4fc3f7; opacity: .85; } .ds-map-ring--preferred { width: 18px; height: 18px; border: 2px solid #c8a96e; } .ds-map-core { width: 14px; height: 14px; background: #3a3a5c; border: 1px solid #6a6a9a; } .ds-map-node small { position: absolute; top: 32px; } .ds-map-node:hover .ds-map-core { filter: brightness(1.6); } .ds-map-node:focus-visible { outline: 2px solid #fff; outline-offset: 3px; border-radius: 50%; }"
     }
-  },
-  "responsive": {
-    "mobileBreakpoint": 700,
-    "filterPanel": "horizontal-rail",
-    "mapTooltip": "bottom-sheet"
-  },
-  "a11y": {
-    "mapNodeKeyboardSelection": ["Enter", "Space"],
-    "liveRegions": ["tag-feedback"],
-    "ariaLabels": ["tooltip-controls", "tag-controls"]
+  ],
+  "narrative": {
+    "northStar": "The Midnight Cartographer",
+    "overview": "This is a dark, map-first working environment for reading a dense Atlas without competing with it. Near-black indigo gives the canvas a quiet night-sky field; layered panels and thin violet borders separate tools from terrain. Gold appears sparingly as a durable marker of preference and identity, while high-chroma filter colors are reserved for the data states that need to survive a crowded map.",
+    "keyCharacteristics": [
+      "Dark indigo canvas with compact layered control surfaces.",
+      "Sparse antique-gold emphasis for title, preference, and selected-map identity.",
+      "Bright filter colors used as functional wayfinding, never general decoration.",
+      "Fine violet borders and small radii for restrained spatial structure."
+    ],
+    "rules": [
+      {
+        "name": "The Gold Is Earned Rule",
+        "body": "Reserve gold for the product identity and persistent player preference. Do not use it as a generic primary-button or hover color.",
+        "section": "colors"
+      },
+      {
+        "name": "The Atlas Stays Loudest Rule",
+        "body": "Keep UI type compact and subordinate to map geometry. Avoid oversized headlines, marketing scale, or expressive display typography.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Raised Surface Rule",
+        "body": "Keep ordinary controls and panels flat. Use the tooltip shadow only when a surface must interrupt the map for focused reading.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use Midnight Field and layered indigo surfaces to keep the Atlas visually dominant.",
+      "Do reserve the signal spectrum for filters, matching node rings and legend swatches exactly.",
+      "Do use Gold for the title and persisted preference states.",
+      "Do keep controls concise, row-based, and visibly connected to the Atlas data they affect.",
+      "Do use the 8px tooltip radius and Tooltip Lift when presenting selected-map details."
+    ],
+    "donts": [
+      "Don't introduce bright general-purpose buttons, broad gradients, or large decorative artwork into the working canvas.",
+      "Don't use Gold as a default accent for unrelated controls or transient hover states.",
+      "Don't replace thin violet borders with heavy dividers or prominent card shadows.",
+      "Don't expand the interface into spacious dashboard cards that reduce available Atlas territory."
+    ]
   }
 }

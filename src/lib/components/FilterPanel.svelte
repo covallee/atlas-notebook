@@ -12,7 +12,7 @@
   <h2>Filters</h2>
 
   <div class="filter-group">
-    <label class="filter-item preferred-toggle">
+    <label class="filter-item preferred-toggle" class:active={$preferredOnly}>
       <input type="checkbox" bind:checked={$preferredOnly} />
       <span class="dot" style="background:#c8a96e"></span>
       Preferred Only
@@ -113,7 +113,18 @@
     user-select: none;
   }
   .preferred-toggle input {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .preferred-toggle:focus-within {
+    outline: 2px solid #c8a96e;
+    outline-offset: 2px;
   }
   .dot {
     width: 10px;
@@ -122,30 +133,38 @@
     flex-shrink: 0;
     display: inline-block;
   }
+
   @media (max-width: 700px) {
     .filter-panel {
       width: 100%;
-      border-right: none;
-      border-bottom: 1px solid #2a2a4a;
-      padding: 8px;
+      min-height: 48px;
+      padding: 8px 10px;
       flex-direction: row;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       overflow-x: auto;
       overflow-y: hidden;
+      border-right: none;
+      border-bottom: 1px solid #2a2a4a;
     }
-    h2,
+    h2 {
+      margin: 0;
+      flex-shrink: 0;
+    }
     hr {
-      display: none;
+      height: 20px;
+      margin: 0;
+      border-top: none;
+      border-left: 1px solid #2a2a4a;
     }
     .filter-group {
       flex-direction: row;
-      gap: 6px;
+      gap: 4px;
       flex-shrink: 0;
     }
     .filter-item {
+      min-height: 32px;
       white-space: nowrap;
-      padding: 5px 10px;
     }
   }
 </style>

@@ -1,15 +1,6 @@
 import { writable, derived } from 'svelte/store';
 
 const STORAGE_KEY = 'atlas-custom-tags';
-const UNDO_WINDOW_MS = 5000;
-export const customTagStatus = writable('');
-export const customTagUndo = writable(null);
-let clearUndoTimer;
-let clearStatusTimer;
-let undoPayload = null;
-customTagUndo.subscribe((value) => {
-  undoPayload = value;
-});
 
 function load() {
   try {
@@ -24,92 +15,78 @@ function save(data) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
-function persist(next) {
-  try {
-    save(next);
-    return true;
-  } catch {
-    setStatus('Storage unavailable. Tag change not saved.');
-    customTagUndo.set(null);
-    return false;
-  }
-}
-
-function scheduleUndoClear() {
-  if (clearUndoTimer) clearTimeout(clearUndoTimer);
-  clearUndoTimer = setTimeout(() => customTagUndo.set(null), UNDO_WINDOW_MS);
-}
-
-function setStatus(message) {
-  customTagStatus.set(message);
-  if (clearStatusTimer) clearTimeout(clearStatusTimer);
-  clearStatusTimer = setTimeout(() => customTagStatus.set(''), UNDO_WINDOW_MS);
-}
+const MAX_TAG_LENGTH = 32;
 
 function createCustomTagsStore() {
   const { subscribe, update, set } = writable(load());
 
+  /** Persists `next`, returns true on success, false if storage is unavailable/full. */
+  function persist(next) {
+    try {
+      save(next);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   return {
     subscribe,
 
+    /**
+     * Adds `tag` to `mapName`, case-insensitively deduped.
+     * Returns { status: 'added' | 'duplicate' | 'empty' | 'error', tag }
+     * so callers can give the user reassurance or a reason nothing changed.
+     */
     addTag(mapName, tag) {
-      const t = tag.trim();
-      if (!t) return;
+      const t = (tag ?? '').trim().slice(0, MAX_TAG_LENGTH);
+      if (!t) return { status: 'empty' };
+
+      let result = { status: 'added', tag: t };
       update((data) => {
-        const next = { ...data };
-        const currentTags = next[mapName] ?? [];
-        if (currentTags.some((existingTag) => existingTag.toLowerCase() === t.toLowerCase())) {
-          setStatus('Already tagged.');
+        const existing = data[mapName] ?? [];
+        const dupe = existing.find((x) => x.toLowerCase() === t.toLowerCase());
+        if (dupe) {
+          result = { status: 'duplicate', tag: dupe };
           return data;
         }
-        next[mapName] = [...currentTags, t];
-        if (!persist(next)) return data;
-        setStatus(`Added "${t}".`);
-        customTagUndo.set(null);
+        const next = { ...data, [mapName]: [...existing, t] };
+        if (!persist(next)) {
+          result = { status: 'error', tag: t };
+          return data;
+        }
         return next;
       });
+      return result;
     },
 
+    /**
+     * Removes `tag` from `mapName`.
+     * Returns { status: 'removed' | 'missing' | 'error', tag } so callers
+     * can offer an undo affordance or surface a storage failure.
+     */
     removeTag(mapName, tag) {
+      let result = { status: 'removed', tag };
       update((data) => {
+        const existing = data[mapName] ?? [];
+        if (!existing.includes(tag)) {
+          result = { status: 'missing', tag };
+          return data;
+        }
+        const filtered = existing.filter((x) => x !== tag);
         const next = { ...data };
-        const existing = next[mapName] ?? [];
-        const removedIndex = existing.findIndex((value) => value === tag);
-        if (removedIndex === -1) return data;
-        const remaining = existing.filter((value) => value !== tag);
-        if (remaining.length === 0) {
+        if (filtered.length === 0) {
           delete next[mapName];
         } else {
-          next[mapName] = remaining;
+          next[mapName] = filtered;
         }
-        if (!persist(next)) return data;
-        customTagUndo.set({ mapName, tag, index: removedIndex });
-        scheduleUndoClear();
-        setStatus(`Removed "${tag}".`);
+        if (!persist(next)) {
+          result = { status: 'error', tag };
+          return data;
+        }
         return next;
       });
-    },
-
-    undoRemove() {
-      let undone = false;
-      let restoredTag = '';
-      update((data) => {
-        if (!undoPayload) return data;
-        const next = { ...data };
-        const current = [...(next[undoPayload.mapName] ?? [])];
-        const index = Math.max(0, Math.min(undoPayload.index, current.length));
-        current.splice(index, 0, undoPayload.tag);
-        next[undoPayload.mapName] = current;
-        if (!persist(next)) return data;
-        undone = true;
-        restoredTag = undoPayload.tag;
-        return next;
-      });
-      if (undone) {
-        if (clearUndoTimer) clearTimeout(clearUndoTimer);
-        customTagUndo.set(null);
-        setStatus(`Restored "${restoredTag}".`);
-      }
+      return result;
     },
 
     getTags(data, mapName) {
@@ -122,12 +99,9 @@ export const customTags = createCustomTagsStore();
 
 /** Derived store: sorted list of all unique custom tags across all maps */
 export const allCustomTags = derived(customTags, ($ct) => {
-  const all = new Map();
+  const all = new Set();
   for (const tags of Object.values($ct)) {
-    for (const t of tags) {
-      const key = t.toLowerCase();
-      if (!all.has(key)) all.set(key, t);
-    }
+    for (const t of tags) all.add(t);
   }
-  return [...all.values()].sort((a, b) => a.localeCompare(b));
+  return [...all].sort();
 });

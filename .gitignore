@@ -22,4 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Impeccable local cache (per-session, not for version control)
 .impeccable/hook.cache.json

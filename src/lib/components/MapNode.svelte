@@ -3,7 +3,7 @@
 
   export let map;
   export let scale = 1;
-  export let isMobile = false;
+  export let isDesktop = true;
   export let highlightColor = null;
   export let dimmed = false;
   export let selected = false;
@@ -23,15 +23,10 @@
   $: baseFill = TYPE_COLORS[map.type] ?? '#3a3a5c';
   $: radius = map.type === 'unique map' ? UNIQUE_MAP_RADIUS : RADIUS;
   $: labelFontSize = map.type === 'unique map' ? 7 : 9;
-  $: showFullLabel = !isMobile || scale >= 1.35;
-  $: displayLabel = showFullLabel ? map.name : map.name.split(' ').map((part) => part[0]).join('').toUpperCase();
-
-  function handleKeydown(event) {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      onSelect(map);
-    }
-  }
+  // Full names stay on for desktop at every zoom level (per user preference —
+  // desktop users want to read names without zooming); mobile keeps the
+  // shorthand-until-zoomed-in behavior to avoid crowding a small viewport.
+  $: label = isDesktop || scale >= 1.7 ? map.name : (map.shorthand ?? map.name);
 </script>
 
 <g
@@ -41,9 +36,13 @@
   on:click={() => onSelect(map)}
   role="button"
   tabindex="0"
-  on:keydown={handleKeydown}
+  on:keydown={(e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onSelect(map);
+    }
+  }}
   aria-label={map.name}
-  aria-pressed={selected}
 >
   <!-- Highlight ring -->
   {#if highlightColor}
@@ -93,7 +92,7 @@
     font-size={labelFontSize / scale}
     fill="#c8c8e8"
     pointer-events="none"
-  >{displayLabel}</text>
+  >{label}</text>
 </g>
 
 <style>
@@ -105,9 +104,6 @@
   }
   .map-node:hover circle:last-of-type {
     filter: brightness(1.6);
-  }
-  .map-node:focus-visible {
-    outline: none;
   }
   .map-node:focus-visible circle:last-of-type {
     stroke: #ffffff;

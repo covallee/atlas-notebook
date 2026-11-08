@@ -1,8 +1,9 @@
 <script>
+  import { onDestroy } from 'svelte';
   import { resolveBossNames } from '../utils/bossNames.js';
   import bossImages from '../data/bossImages.json';
-  import { preferences, preferencesStorageError, preferencesStatus } from '../stores/preferences.js';
-  import { customTags, customTagStatus, customTagUndo } from '../stores/customTags.js';
+  import { preferences } from '../stores/preferences.js';
+  import { customTags } from '../stores/customTags.js';
 
   export let map = null;
   export let onClose = () => {};
@@ -17,19 +18,101 @@
   $: userTags = map ? ($customTags[map.name] ?? []) : [];
 
   let newTag = '';
+  let tagFeedback = null; // { kind: 'duplicate' | 'error', message }
+  let undoInfo = null; // { tag }
+  let starFeedback = null;
+
+  let feedbackTimer;
+  let undoTimer;
+  let starTimer;
+
+  // Switching to a different map should drop any stale transient state
+  // from the previous one (undo offers, error banners, unsent draft tags).
+  let lastMapName = null;
+  $: if (map && map.name !== lastMapName) {
+    lastMapName = map.name;
+    resetTransientState();
+  }
+
+  function resetTransientState() {
+    clearTimeout(feedbackTimer);
+    clearTimeout(undoTimer);
+    clearTimeout(starTimer);
+    tagFeedback = null;
+    undoInfo = null;
+    starFeedback = null;
+    newTag = '';
+  }
+
+  onDestroy(() => {
+    clearTimeout(feedbackTimer);
+    clearTimeout(undoTimer);
+    clearTimeout(starTimer);
+  });
+
+  function showTagFeedback(kind, message, ms = 2600) {
+    clearTimeout(feedbackTimer);
+    tagFeedback = { kind, message };
+    feedbackTimer = setTimeout(() => {
+      tagFeedback = null;
+    }, ms);
+  }
 
   function ratingBar(value) {
     return value ? Math.round((value / 10) * 100) : 0;
   }
 
   function handleAddTag() {
-    if (!newTag.trim() || !map) return;
-    customTags.addTag(map.name, newTag.trim());
-    newTag = '';
+    if (!map || !newTag.trim()) return;
+    const result = customTags.addTag(map.name, newTag);
+    if (result.status === 'added') {
+      newTag = '';
+      tagFeedback = null;
+      clearTimeout(undoTimer);
+      undoInfo = null;
+    } else if (result.status === 'duplicate') {
+      showTagFeedback('duplicate', `Already tagged "${result.tag}"`);
+    } else if (result.status === 'error') {
+      showTagFeedback('error', 'Could not save tag — storage unavailable');
+    }
   }
 
   function handleTagKeydown(e) {
     if (e.key === 'Enter') handleAddTag();
+  }
+
+  function handleRemoveTag(tag) {
+    const result = customTags.removeTag(map.name, tag);
+    if (result.status === 'removed') {
+      clearTimeout(undoTimer);
+      undoInfo = { tag };
+      undoTimer = setTimeout(() => {
+        undoInfo = null;
+      }, 5000);
+    } else if (result.status === 'error') {
+      showTagFeedback('error', 'Could not remove tag — storage unavailable');
+    }
+  }
+
+  function handleUndoRemove() {
+    if (!map || !undoInfo) return;
+    customTags.addTag(map.name, undoInfo.tag);
+    clearTimeout(undoTimer);
+    undoInfo = null;
+  }
+
+  function handleToggleStar() {
+    if (!map) return;
+    const ok = preferences.toggle(map.name);
+    if (!ok) {
+      clearTimeout(starTimer);
+      starFeedback = 'Not saved — storage unavailable';
+      starTimer = setTimeout(() => {
+        starFeedback = null;
+      }, 3200);
+    } else {
+      starFeedback = null;
+    }
   }
 </script>
 
@@ -45,14 +128,17 @@
           class="star-btn"
           class:active={isPreferred}
           title={isPreferred ? 'Remove from preferred' : 'Add to preferred'}
-          aria-label={isPreferred ? 'Remove from preferred maps' : 'Add to preferred maps'}
-          on:click={() => preferences.toggle(map.name)}
+          aria-label={isPreferred ? 'Remove from preferred' : 'Add to preferred'}
+          on:click={handleToggleStar}
         >
           ★
         </button>
         <button class="close-btn" aria-label="Close map details" on:click={onClose}>✕</button>
       </div>
     </div>
+    {#if starFeedback}
+      <p class="inline-status error star-status" role="status">{starFeedback}</p>
+    {/if}
 
     {#if map.image}
       <img class="map-image" src={map.image} alt={map.name} />
@@ -122,24 +208,12 @@
               {tag}
               <button
                 class="remove-tag"
-                on:click={() => customTags.removeTag(map.name, tag)}
+                on:click={() => handleRemoveTag(tag)}
                 title="Remove tag"
                 aria-label={`Remove tag ${tag}`}
               >✕</button>
             </span>
           {/each}
-        </div>
-        <div class="tag-feedback" aria-live="polite">
-          {#if $preferencesStorageError}
-            <span>{$preferencesStorageError}</span>
-          {:else if $preferencesStatus}
-            <span>{$preferencesStatus}</span>
-          {:else if $customTagStatus}
-            <span>{$customTagStatus}</span>
-            {#if $customTagUndo}
-              <button class="undo-tag-btn" on:click={() => customTags.undoRemove()} aria-label="Undo tag removal">Undo</button>
-            {/if}
-          {/if}
         </div>
         <div class="tag-input-row">
           <input
@@ -148,9 +222,19 @@
             on:keydown={handleTagKeydown}
             placeholder="Add tag…"
             maxlength="32"
-            aria-label="Add custom tag"
+            aria-label="Add a custom tag"
           />
-          <button class="add-tag-btn" on:click={handleAddTag} aria-label="Add custom tag">+</button>
+          <button class="add-tag-btn" on:click={handleAddTag} aria-label="Add tag">+</button>
+        </div>
+        <div aria-live="polite">
+          {#if tagFeedback}
+            <p class="inline-status" class:error={tagFeedback.kind === 'error'}>{tagFeedback.message}</p>
+          {:else if undoInfo}
+            <p class="inline-status undo-row">
+              Removed "{undoInfo.tag}"
+              <button class="undo-btn" on:click={handleUndoRemove}>Undo</button>
+            </p>
+          {/if}
         </div>
       </div>
     </div>
@@ -204,6 +288,8 @@
     color: #555;
     font-size: 18px;
     cursor: pointer;
+    min-width: 32px;
+    min-height: 32px;
     padding: 0 2px;
     line-height: 1;
   }
@@ -214,9 +300,16 @@
     color: #888;
     font-size: 14px;
     cursor: pointer;
+    min-width: 32px;
+    min-height: 32px;
     padding: 0 2px;
   }
   .close-btn:hover { color: #fff; }
+  .star-btn:focus-visible,
+  .close-btn:focus-visible {
+    outline: 2px solid #c8a96e;
+    outline-offset: 2px;
+  }
   .map-image {
     width: 100%;
     height: 120px;
@@ -307,7 +400,7 @@
     border: none;
     color: #4dd0e1;
     cursor: pointer;
-    font-size: 9px;
+    font-size: 11px;
     padding: 0;
     line-height: 1;
     opacity: 0.7;
@@ -341,39 +434,52 @@
     line-height: 1;
   }
   .add-tag-btn:hover { background: #3a3a6a; border-color: #4dd0e1; }
-  .tag-feedback {
-    min-height: 18px;
-    color: #e0d9f0;
+
+  .inline-status {
+    margin: 4px 0 0;
     font-size: 11px;
+    color: #b0a8c8;
+    line-height: 1.4;
+  }
+  .inline-status.error { color: #ef9a9a; }
+  .star-status {
+    padding: 4px 12px 0;
+    margin: 0;
+  }
+  .undo-row {
     display: flex;
     align-items: center;
     gap: 8px;
   }
-  .undo-tag-btn {
+  .undo-btn {
     background: none;
-    border: 1px solid #4dd0e1;
+    border: none;
     color: #4dd0e1;
-    border-radius: 4px;
     font-size: 11px;
+    font-weight: 700;
+    text-decoration: underline;
     cursor: pointer;
-    padding: 1px 6px;
+    padding: 0;
+    min-height: 22px;
   }
+  .undo-btn:hover { color: #7fe3f2; }
+  .undo-btn:focus-visible {
+    outline: 2px solid #4dd0e1;
+    outline-offset: 2px;
+  }
+
   @media (max-width: 700px) {
     .tooltip {
       top: auto;
-      right: 0;
-      bottom: 0;
-      left: 0;
+      right: 12px;
+      bottom: 12px;
+      left: 12px;
+      width: auto;
+      max-height: calc(100vh - 132px);
       transform: none;
-      width: 100%;
-      border-radius: 12px 12px 0 0;
-      max-height: 58vh;
-      border-left: none;
-      border-right: none;
-      border-bottom: none;
     }
     .tooltip-body {
-      max-height: calc(58vh - 55px);
+      max-height: min(45vh, 360px);
     }
   }
 </style>
